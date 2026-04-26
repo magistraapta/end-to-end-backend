@@ -1,0 +1,79 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8000:8000
+    environment:
+      - PORT=8000
+      - DATABASE_URL=mongodb://admin:admin@mongodb:27017/app_db?authSource=admin
+      - DATABASE_NAME=app_db
+      - DEBUG=True
+    depends_on:
+      - mongodb
+    networks:
+      - backend_network
+
+  mongodb:
+    image: mongo:latest
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=admin
+      - MONGO_INITDB_DATABASE=app_db
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - backend_network
+    restart: always
+    healthcheck:
+      test: ["CMD", "mongosh", "--username", "admin", "--password", "admin", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  mongodb_express:
+    image: mongo-express:latest
+    ports:
+      - 8081:8081
+    environment:
+      - ME_CONFIG_MONGODB_URL=mongodb://admin:admin@mongodb:27017/?authSource=admin
+      - ME_CONFIG_MONGODB_DATABASE=app_db
+      - ME_CONFIG_BASICAUTH=false
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - backend_network
+    restart: always
+
+  jenkins:
+    image: jenkins/jenkins:lts-jdk17
+    container_name: jenkins
+    user: root
+    ports:
+      - 8080:8080
+      - 50000:50000
+    volumes:
+      - jenkins_data:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - backend_network
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+      
+volumes:
+  mongodb_data:
+  jenkins_data:
+networks:
+  backend_network:
+    driver: bridge

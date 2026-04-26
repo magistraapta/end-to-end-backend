@@ -1,0 +1,20 @@
+[project]
+name = "multi-application-docker"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12.0"
+dependencies = [
+    "fastapi>=0.136.1",
+    "loadenv>=0.1.1",
+    "motor>=3.7.1",
+    "pydantic>=2.13.3",
+    "pymongo>=4.17.0",
+    "python-dotenv>=1.2.2",
+    "uvicorn>=0.46.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]
