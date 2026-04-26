@@ -12,6 +12,47 @@ pipeline {
             }
         }
 
+        stage('Debug Jenkins Docker Runtime') {
+            steps {
+                script {
+                    // #region agent log
+                    def debugLog = { hypothesisId, message, data ->
+                        def payload = groovy.json.JsonOutput.toJson([
+                            sessionId: 'f330b7',
+                            runId: 'pre-fix',
+                            hypothesisId: hypothesisId,
+                            location: 'Jenkinsfile:Debug Jenkins Docker Runtime',
+                            message: message,
+                            data: data,
+                            timestamp: System.currentTimeMillis()
+                        ])
+                        echo "AGENT_DEBUG ${payload}"
+                    }
+
+                    def shellOut = { command ->
+                        sh(returnStdout: true, script: "${command} 2>&1 || true").trim()
+                    }
+
+                    debugLog('H1', 'Docker CLI lookup', [
+                        dockerPath: shellOut('command -v docker'),
+                        path: shellOut('printf "%s" "$PATH"')
+                    ])
+                    debugLog('H2', 'Docker socket and Jenkins user check', [
+                        socket: shellOut('ls -l /var/run/docker.sock'),
+                        user: shellOut('id')
+                    ])
+                    debugLog('H3', 'Docker command execution check', [
+                        dockerVersion: shellOut('docker --version'),
+                        dockerInfo: shellOut('docker info --format "{{.ServerVersion}}"')
+                    ])
+                    debugLog('H4', 'Docker Compose availability check', [
+                        composeVersion: shellOut('docker compose version')
+                    ])
+                    // #endregion agent log
+                }
+            }
+        }
+
         stage('Run Tests') {
             steps {
                 sh '''
