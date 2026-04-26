@@ -57,8 +57,8 @@ pipeline {
             steps {
                 sh '''
                     docker run --rm \
-                        -v "$PWD:/app" \
-                        -w /app \
+                        --volumes-from jenkins \
+                        -w "$PWD" \
                         python:3.12-slim \
                         sh -c "pip install --no-cache-dir uv && UV_PROJECT_ENVIRONMENT=/tmp/venv uv sync --frozen --dev && UV_PROJECT_ENVIRONMENT=/tmp/venv uv run pytest"
                 '''
