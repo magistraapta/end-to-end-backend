@@ -19,5 +19,17 @@ pipeline {
                 sh 'pytest'
             }
         }
+
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker compose build'
+            }
+        }
+
+        stage('Containerize using Docker') {
+            steps {
+                sh 'docker compos up -d'
+            }
+        }
     }
 }
